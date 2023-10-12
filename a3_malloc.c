@@ -47,7 +47,9 @@ void h_layout(h_Node* ptr) {
 int m_init(void) { return 0; }
 
 int main(int argc, char const* argv[]) {
-    void* c_break = sbrk(4096);
+    void* c_break;
+    printf("0 - %p \n", c_break);
+    c_break = sbrk(4096);
     printf("1 - %p \n", c_break);
     c_break = sbrk(4096);
     printf("2 - %p \n", c_break);
