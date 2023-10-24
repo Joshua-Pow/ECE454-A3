@@ -11,6 +11,8 @@ struct h_Node {
     void* n_blk;          // defines the starting address of the next block
     struct h_Node* NEXT;  // points to the next h_Node containing the data for the
                           // next block linked to this one
+    struct h_Node* PREV;  // points to the previous h_Node containing the data for
+                          // the previous block linked to this one
 };
 
 struct h_List {
@@ -30,17 +32,52 @@ h_Node* create_h_Node(int STATUS, size_t SIZE, void* c_blk, void* n_blk) {
 
 void h_layout(h_Node* ptr) {
     h_Node* currentNode = ptr;
-    if (ptr == NULL) {
+    if (currentNode == NULL) {
         printf("NULL\n");
         return;
     }
-    while (ptr->NEXT != NULL) {
+    do {
         printf("--------------------\n");
         printf("STATUS: %d\n", ptr->STATUS);
         printf("SIZE: %lu\n", ptr->SIZE);
         printf("c_blk: %p\n", ptr->c_blk);
         printf("n_blk: %p\n", ptr->n_blk);
-        ptr = ptr->NEXT;
+        currentNode = currentNode->NEXT;
+    } while (currentNode != NULL);
+}
+
+int m_check(void) { return 0; }
+
+void m_free(void* ptr) {
+    // Starting of the block is the h_Node
+    h_Node* currentNode = (h_Node*)ptr;
+    currentNode->STATUS = 0;
+
+    // Coalescing
+
+    // If the next block exists and previous block exist
+    if (currentNode->NEXT != NULL && currentNode->PREV != NULL) {
+        // If both blocks are free
+        if (currentNode->NEXT->STATUS == 0 && currentNode->PREV->STATUS == 0) {
+            currentNode->PREV->SIZE += currentNode->SIZE + currentNode->NEXT->SIZE;
+            currentNode->PREV->NEXT = currentNode->NEXT->NEXT;
+        } else if (currentNode->NEXT->STATUS == 0) {  // If only next block is free
+            currentNode->SIZE += currentNode->NEXT->SIZE;
+            currentNode->NEXT = currentNode->NEXT->NEXT;
+        } else if (currentNode->PREV->STATUS == 0) {  // If only previous block is free
+            currentNode->PREV->SIZE += currentNode->SIZE;
+            currentNode->PREV->NEXT = currentNode->NEXT;
+        }
+    } else if (currentNode->NEXT != NULL) {  // If only next block exists
+        if (currentNode->NEXT->STATUS == 0) {
+            currentNode->SIZE += currentNode->NEXT->SIZE;
+            currentNode->NEXT = currentNode->NEXT->NEXT;
+        }
+    } else if (currentNode->PREV != NULL) {  // If only previous block exists
+        if (currentNode->PREV->STATUS == 0) {
+            currentNode->PREV->SIZE += currentNode->SIZE;
+            currentNode->PREV->NEXT = currentNode->NEXT;
+        }
     }
 }
 
