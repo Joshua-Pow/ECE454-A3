@@ -1,8 +1,8 @@
 #include "a3_malloc.h"
 
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define ALLOC_SIZE 4096
 
@@ -20,10 +20,11 @@ struct h_Node {
 
 struct h_List {
     struct h_Node* head;  // points to the first h_Node of the list
-    struct h_Node* tail;  // points to the last h_Node of the list
-} h_list;
+    // struct h_Node* tail;  // points to the last h_Node of the list
+};
 
-void *start;
+void* start;
+h_List memoryList;
 
 h_Node* create_h_Node(int STATUS, size_t SIZE, void* c_blk, void* n_blk) {
     h_Node* newNode = (h_Node*)malloc(sizeof(h_Node));
@@ -86,27 +87,29 @@ void m_free(void* ptr) {
     }
 }
 
-int m_init(void) { 
-    start = sbrk(ALLOC_SIZE);
-    if (!start){
+int m_init(void) {
+    start = sbrk(ALLOC_SIZE);  // heap
+    if (!start) {
         return -1;
     }
-    h_list.head = (struct h_Node *) start;
-    h_list.head->STATUS = 0;
-    h_list.head->SIZE = ALLOC_SIZE - sizeof(h_Node);
-    h_list.head->c_blk = start + sizeof(h_Node);
-    h_list.head->n_blk = NULL;
-    h_list.head->NEXT = NULL;
+
+    // The head of the memory list starts at the head of the heap
+    memoryList.head = sbrk(sizeof(h_Node));
+    // memoryList.head = (struct h_Node*)start;
+    memoryList.head->STATUS = 0;
+    memoryList.head->SIZE = ALLOC_SIZE;
+    memoryList.head->c_blk = start;
+    memoryList.head->n_blk = NULL;
+    memoryList.head->NEXT = NULL;
     return 0;
-    }
+}
 
-void *m_malloc(size_t size) {
-    struct h_Node *node = h_List->start;
+void* m_malloc(size_t size) {
+    struct h_Node* node = memoryList->start;
 
-    while(node != NULL) {
-        if (!node->STATUS && node->SIZE >= size) {
-
-            struct h_Node *newNode = node->c_blk + size;
+    while (node != NULL) {
+        if ((node->STATUS == 0) && (node->SIZE >= size)) {
+            struct h_Node* newNode = node->c_blk + node->SIZE;  // Need to make new node to put at tail
 
             newNode->STATUS = 0;
             newNode->SIZE = node->SIZE - size - sizeof(struct h_Node);
@@ -115,8 +118,12 @@ void *m_malloc(size_t size) {
             newNode->NEXT = node->NEXT;
 
             node->STATUS = 1;
-            
-            return node->c_blk;
+            node->c_blk = sizeof(struct h_Node) + size;
+            node->n_blk = newNode->c_blk;
+            node->NEXT = newNode;
+            node->PREV
+
+                return node->c_blk;
         }
         node = node->NEXT;
     }
