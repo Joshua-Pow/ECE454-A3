@@ -8,6 +8,10 @@ typedef struct h_List h_List;
 
 void h_layout(h_Node* ptr);
 
+// This method should be called to check the status of the Heap area in your
+// program. It will check if the next and/or previous blocks are free and join
+// them to the current free block to make a bigger free block. It returns 0 for
+// a successful check and returns -1 in case of any problems.
 int m_check(void);
 
 // This method should be called to initialize the heap area in your program,
@@ -27,7 +31,7 @@ int m_init(void);
 // h_Node, is connected to a block in the Heap and contains its information.
 // Thus for tracking the information about each block, its relevant h_Node
 // should be checked
-void* m_alloc(size_t size);
+void* m_malloc(size_t size);
 
 // This method returns the allocated block pointed to by ptr to the free space
 // of the Heap. This method should work if and only if the ptr is valid, meaning
