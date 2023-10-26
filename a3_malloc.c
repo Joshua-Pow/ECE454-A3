@@ -47,12 +47,14 @@ void h_layout(h_Node* ptr) {
     } while (currentNode != NULL);
 }
 
+// Finds the best fit of size in the heap
 h_Node* findBestFit(size_t size) {
     h_Node* currentNode = memoryList.head;
     h_Node* bestFit = NULL;
+    size_t sizeWithHeader = size + sizeof(h_Node);
 
     while (currentNode != NULL) {
-        if (currentNode->STATUS == 0 && currentNode->SIZE >= size) {
+        if (currentNode->STATUS == 0 && currentNode->SIZE >= sizeWithHeader) {
             if (bestFit == NULL) {
                 bestFit = currentNode;
             } else if (currentNode->SIZE < bestFit->SIZE) {
@@ -105,9 +107,9 @@ void m_free(void* ptr) {
     printf("Free ptr: %p\n", ptr);
     printf("Freeing %p\n", ptr - sizeof(h_Node));
 
-    h_Node* currentNode = (char*)ptr - sizeof(h_Node);  // ptr is a pointer to the allocated block NOT the h_Node
-    currentNode->STATUS = 0;                            // Set current block to free since were not going to use it
-    currentNode->SIZE += sizeof(h_Node);                // Add the header size back
+    h_Node* currentNode = (h_Node*)((char*)ptr - sizeof(h_Node));  // ptr is a pointer to the allocated block NOT the h_Node
+    currentNode->STATUS = 0;                                       // Set current block to free since were not going to use it
+    currentNode->SIZE += sizeof(h_Node);                           // Add the header size back
 
     // Keep track of used memory
     memoryList.usedSize -= (currentNode->SIZE + sizeof(h_Node));
@@ -170,7 +172,7 @@ void* m_malloc(size_t size) {
     }
 
     // Represents where the new free space is going to be
-    struct h_Node* newNode = (char*)(node->c_blk) + size;
+    struct h_Node* newNode = (h_Node*)((char*)(node->c_blk) + size);
 
     newNode->STATUS = 0;
     newNode->SIZE = node->SIZE - size - sizeof(h_Node);
@@ -216,9 +218,10 @@ void printSpaceUtilization() {
     printf("Space utilization: %.4f\n", (float)memoryList.usedSize / (float)ALLOC_SIZE);
 }
 
+// instructions 385755
+// seconds = 0.002817
+// 136 938 232 instructions/sec
 void driverGood() {
-    // Number of operations per second executed through each driver
-    //  ????
     m_init();
     h_layout(memoryList.head);
 
@@ -246,8 +249,26 @@ void driverGood() {
     pt2 = m_malloc(400);
     printSpaceUtilization();
     h_layout(memoryList.head);
+    // printf("\nm_malloc(2000)\n");
+    // char *pt1 = m_malloc(2000);
+    // h_layout(memoryList.head);
+    // printf("\nm_malloc(500)\n");
+    // char *pt2 = m_malloc(500);
+    // h_layout(memoryList.head);
+    // printf("\nm_malloc(300)\n");
+    // char *pt3 = m_malloc(300);
+    // h_layout(memoryList.head);
+    // printf("\nm_free(500)\n");
+    // m_free(pt2);
+    // h_layout(memoryList.head);
+    // printf("\nm_malloc(1500)\n");
+    // pt3 = m_malloc(1500);
+    // h_layout(memoryList.head);
 }
 
+// instuctions = 306705
+// seconds = 0.002467
+// 124,323,064 instructions/sec
 void driverBad() {
     // Number of operations per second executed through each driver
     //  ????
@@ -278,6 +299,6 @@ int main(int argc, char const* argv[]) {
     // c_break = sbrk(4096);
     // printf("2 - %p \n", c_break);
     // c_break = sbrk(4096);
-    driverBad();
+    driverGood();
     return 0;
 }

@@ -6,6 +6,7 @@
 typedef struct h_Node h_Node;
 typedef struct h_List h_List;
 
+// Prints the current layout of the heap
 void h_layout(h_Node* ptr);
 
 // This method should be called to check the status of the Heap area in your
